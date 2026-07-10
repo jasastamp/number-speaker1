@@ -40,77 +40,66 @@
 <button onclick="stopSpeaking()">Stop</button>
 
 <script>
-    let interval = null;
+let running = false;
 
-    const colours = {
-	0: "grey",
-        1: "red",
-        2: "orange",
-        3: "gold",
-        4: "green",
-        5: "blue",
-        6: "indigo",
-        7: "violet",
-        8: "brown",
-        9: "black"
-    };
-
-    function speak(text) {
-    	const msg = new SpeechSynthesisUtterance(text);
-    	speechSynthesis.speak(msg);
-    	// speechSynthesis.cancel();  //cancels speech queue - not needed as long as voice is fast enough
-    	// const msg = new SpeechSynthesisUtterance(text);
-    	// speechSynthesis.speak(msg);
-    }
-
-
-let speaking = false;
+const colours = {
+    0: "grey",
+    1: "red",
+    2: "orange",
+    3: "gold",
+    4: "green",
+    5: "blue",
+    6: "indigo",
+    7: "violet",
+    8: "brown",
+    9: "black"
+};
 
 function startSpeaking() {
-    if (interval) return;
+    if (running) return;
+    running = true;
 
-	const unlock = new SpeechSynthesisUtterance("start");
+    // Unlock speech on iPhone
+    const unlock = new SpeechSynthesisUtterance("start");
     unlock.rate = 3;
     speechSynthesis.speak(unlock);
 
-    interval = setInterval(() => {
-        if (speaking) return; // wait until speech finishes
-
-        const min = parseInt(document.getElementById("minValue").value);
-	const max = parseInt(document.getElementById("maxValue").value);
-
-	const num = Math.floor(Math.random() * (max - min + 1)) + min;
-
-        const box = document.getElementById("numberBox");
-        box.textContent = num;
-	const lastDigit = Math.abs(num) % 10;
-        box.style.backgroundColor = colours[lastDigit];
-
-        const msg = new SpeechSynthesisUtterance(num);
-
-
-	
-
-
-	msg.rate = 2;   // CHANGE THIS NUMBER TO CONTROL SPEED
-        msg.pitch = 1;    // optional
-        msg.volume = 1;   // optional
-
-        speaking = true;
-
-        msg.onend = () => {
-            speaking = false;
-        };
-
-        speechSynthesis.speak(msg);
-
-    }, 1000); //ie 1000 msec every number
+    unlock.onend = () => {
+        loop(); // start the real loop AFTER unlock finishes
+    };
 }
 
-    function stopSpeaking() {
-        clearInterval(interval);
-        interval = null;
-    }
+function loop() {
+    if (!running) return;
+
+    const min = parseInt(document.getElementById("minValue").value);
+    const max = parseInt(document.getElementById("maxValue").value);
+
+    const num = Math.floor(Math.random() * (max - min + 1)) + min;
+
+    const box = document.getElementById("numberBox");
+    box.textContent = num;
+
+    const lastDigit = Math.abs(num) % 10;
+    box.style.backgroundColor = colours[lastDigit];
+
+    const msg = new SpeechSynthesisUtterance(num);
+    msg.rate = 2;
+    msg.pitch = 1;
+    msg.volume = 1;
+
+    msg.onend = () => {
+        // Wait 1 second, then loop again
+        setTimeout(loop, 1000);
+    };
+
+    speechSynthesis.speak(msg);
+}
+
+function stopSpeaking() {
+    running = false;
+    speechSynthesis.cancel();
+}
 </script>
 
 </body>
