@@ -69,6 +69,10 @@ let speaking = false;
 function startSpeaking() {
     if (interval) return;
 
+	const unlock = new SpeechSynthesisUtterance("start");
+    unlock.rate = 3;
+    speechSynthesis.speak(unlock);
+
     interval = setInterval(() => {
         if (speaking) return; // wait until speech finishes
 
